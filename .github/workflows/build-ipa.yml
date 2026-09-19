@@ -30,7 +30,7 @@ jobs:
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: latest-stable
+          xcode-version: "16.4"
 
       - name: Cache Homebrew
         uses: actions/cache@v4
@@ -62,7 +62,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.DERIVED_DATA }}
-          key: dd-${{ runner.os }}-${{ hashFiles('project.yml', 'TelegramPlay/**/*.swift', 'TelegramPlay/Assets.xcassets/**') }}-v2
+          key: dd-${{ runner.os }}-${{ hashFiles('project.yml', 'TelegramPlay/**/*.swift', 'TelegramPlay/Assets.xcassets/**') }}-v3
           restore-keys: |
             dd-${{ runner.os }}-
 
@@ -83,6 +83,13 @@ jobs:
 
       - name: Generate Xcode project
         run: xcodegen generate
+
+      - name: Resolve Swift packages
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -derivedDataPath "$DERIVED_DATA"
 
       - name: Build unsigned (iphoneos)
         run: |

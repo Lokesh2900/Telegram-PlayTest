@@ -9,7 +9,9 @@ struct RootView: View {
             case .starting:
                 ProgressView("Connecting to Telegram…")
             case .phone, .code, .password(_):
-                AuthFlowView()
+                NavigationStack {
+                    AuthFlowView()
+                }
             case .ready:
                 NavigationStack {
                     ChatListView()

@@ -11,7 +11,12 @@ struct MPVMetalPlayerView: UIViewControllerRepresentable {
         return mpv
     }
 
-    func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) {}
+    func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) {
+        guard let mpv = uiViewController as? MPVMetalViewController,
+              let url = coordinator.playUrl else { return }
+        mpv.playUrl = url
+        mpv.loadFile(url)
+    }
 
     func makeCoordinator() -> Coordinator {
         coordinator
