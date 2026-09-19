@@ -121,7 +121,7 @@ final class TelegramClientService: ObservableObject {
             await configureTdlibParameters()
         case .authorizationStateWaitPhoneNumber:
             authPhase = .phone
-        case .authorizationStateWaitCode:
+        case .authorizationStateWaitCode(_):
             authPhase = .code
         case .authorizationStateWaitPassword(let info):
             authPhase = .password(hint: info.passwordHint)

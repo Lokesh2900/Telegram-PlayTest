@@ -36,7 +36,8 @@ final class MPVMetalViewController: UIViewController {
 #else
         checkError(mpv_request_log_messages(mpv, "no"))
 #endif
-        checkError(mpv_set_option(mpv, "wid", MPV_FORMAT_INT64, &metalLayer))
+        var wid = Int64(bitPattern: UInt64(UInt(bitPattern: Unmanaged.passUnretained(metalLayer).toOpaque())))
+        checkError(mpv_set_option(mpv, "wid", MPV_FORMAT_INT64, &wid))
         checkError(mpv_set_option_string(mpv, "subs-match-os-language", "yes"))
         checkError(mpv_set_option_string(mpv, "subs-fallback", "yes"))
         checkError(mpv_set_option_string(mpv, "vo", "gpu-next"))

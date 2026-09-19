@@ -62,7 +62,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.DERIVED_DATA }}
-          key: dd-${{ runner.os }}-${{ hashFiles('project.yml', 'TelegramPlay/**/*.swift', 'TelegramPlay/Assets.xcassets/**') }}
+          key: dd-${{ runner.os }}-${{ hashFiles('project.yml', 'TelegramPlay/**/*.swift', 'TelegramPlay/Assets.xcassets/**') }}-v2
           restore-keys: |
             dd-${{ runner.os }}-
 
@@ -103,10 +103,10 @@ jobs:
             2>&1 | tee xcodebuild.log
           BUILD_STATUS=${PIPESTATUS[0]}
           {
-            echo "{\"sessionId\":\"793cba\",\"runId\":\"ci-build\",\"hypothesisId\":\"H5\",\"location\":\"build-ipa.yml:Build unsigned\",\"message\":\"xcodebuild finished\",\"data\":{\"exitCode\":$BUILD_STATUS},\"timestamp\":$(($(date +%s)*1000))}"
-            grep -n "error:" xcodebuild.log | tail -n 40 | while IFS= read -r line; do
+            echo "{\"sessionId\":\"793cba\",\"runId\":\"ci-build\",\"hypothesisId\":\"H6\",\"location\":\"build-ipa.yml:Build unsigned\",\"message\":\"xcodebuild finished\",\"data\":{\"exitCode\":$BUILD_STATUS,\"logBytes\":$(wc -c < xcodebuild.log | tr -d ' ')},\"timestamp\":$(($(date +%s)*1000))}"
+            grep -En "(^|[[:space:]])(error:|warning:.*error|BUILD FAILED)" xcodebuild.log | tail -n 60 | while IFS= read -r line; do
               esc=${line//\\/\\\\}; esc=${esc//\"/\\\"}
-              echo "{\"sessionId\":\"793cba\",\"runId\":\"ci-build\",\"hypothesisId\":\"compiler\",\"location\":\"xcodebuild.log\",\"message\":\"swift compiler error\",\"data\":{\"line\":\"$esc\"},\"timestamp\":$(($(date +%s)*1000))}"
+              echo "{\"sessionId\":\"793cba\",\"runId\":\"ci-build\",\"hypothesisId\":\"compiler\",\"location\":\"xcodebuild.log\",\"message\":\"build diagnostic\",\"data\":{\"line\":\"$esc\"},\"timestamp\":$(($(date +%s)*1000))}"
             done
           } >> debug-793cba.log
           exit "$BUILD_STATUS"
@@ -116,6 +116,14 @@ jobs:
         with:
           name: debug-793cba-log
           path: debug-793cba.log
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Upload xcodebuild log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-log
+          path: xcodebuild.log
           if-no-files-found: warn
           retention-days: 7
 
