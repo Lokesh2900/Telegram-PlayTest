@@ -19,8 +19,8 @@ jobs:
     env:
       SCHEME: TelegramPlay
       PROJECT: TelegramPlay.xcodeproj
-      DERIVED_DATA: ${{ runner.temp }}/DerivedData
-      APP_PRODUCT: ${{ runner.temp }}/DerivedData/Build/Products/Release-iphoneos/TelegramPlay.app
+      DERIVED_DATA: ${{ github.workspace }}/.derivedData
+      APP_PRODUCT: ${{ github.workspace }}/.derivedData/Build/Products/Release-iphoneos/TelegramPlay.app
       IPA_OUTPUT: TelegramPlay-unsigned.ipa
 
     steps:

@@ -2,6 +2,7 @@
 xcuserdata/
 *.xcuserstate
 DerivedData/
+.derivedData/
 Config/Secrets.xcconfig
 TelegramPlay.xcodeproj/
 *.ipa
