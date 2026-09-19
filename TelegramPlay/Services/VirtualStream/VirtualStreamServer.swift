@@ -34,6 +34,7 @@ final class VirtualStreamServer {
     private func startListener() throws {
         let params = NWParameters.tcp
         params.allowLocalEndpointReuse = true
+        params.requiredLocalEndpoint = NWEndpoint(host: .ipv4(.loopback), port: .any)
         guard let nwPort = NWEndpoint.Port(rawValue: port == 0 ? 0 : port) else {
             throw VirtualStreamError.readFailed
         }
