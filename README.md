@@ -31,12 +31,25 @@ Sign in with Telegram (TDLib), open a chat, and play videos with **MPVKit** (lib
 1. Enter your phone number and Telegram login code (and 2FA password if enabled).
 2. Pick a chat from the list.
 3. Tap a video, animation, or video document — the file is downloaded via TDLib and played in MPV.
+4. **Split releases** (`.mkv.001` / `.002`, or `.zip.001` / `.002`) appear as one row and play through a local HTTP stream with seek support.
+
+## Split files (seekable virtual stream)
+
+Telegram channels often post large files in numbered parts. The app groups those messages and plays them as a single seekable title:
+
+| Type | Example | Behavior |
+|------|---------|----------|
+| Raw split | `movie.mkv.001`, `movie.mkv.002` | Parts are concatenated virtually; MPV reads `http://127.0.0.1:…` with HTTP `Range` |
+| Split ZIP | `release.zip.001`, `release.zip.002` | Only **STORED** (uncompressed) archives are supported; the inner video is streamed with the same range server |
+
+Compressed (deflated) ZIP releases cannot be seek-streamed and show an error when you try to play them. Partial downloads still use TDLib’s file cache and count toward the 2 GB limit.
 
 ## Architecture
 
 | Layer | Library |
 |--------|---------|
 | Telegram account, chats, file download | [TDLibKit](https://github.com/Swiftgram/TDLibKit) |
+| Split-part / split-ZIP seek streaming | Local `VirtualStreamServer` (HTTP Range) + `TDLibVirtualByteSource` |
 | Playback (H.264/H.265, subtitles, HDR) | [MPVKit](https://github.com/mpvkit/MPVKit) |
 
 Telegram does not expose plain HTTP URLs for chat files; TDLib writes a local path as the file downloads, which MPV opens with `loadfile`.

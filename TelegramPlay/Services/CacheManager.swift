@@ -11,6 +11,7 @@ final class CacheManager: ObservableObject {
 
     var isPlaybackActive = false
     var playbackExcludeChatId: Int64?
+    var playbackExcludeFileIds: Set<Int> = []
 
     private weak var client: TDLibClient?
     private var lastCleanupAttempt: Date?

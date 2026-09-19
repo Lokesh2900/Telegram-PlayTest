@@ -6,6 +6,8 @@ struct VideoPlayerScreen: View {
     let title: String
     let fileURL: URL
     let chatId: Int64
+    var virtualSessionId: UUID?
+    var virtualFileIds: [Int] = []
 
     @ObservedObject private var coordinator = MPVMetalPlayerView.Coordinator()
     @State private var buffering = false
@@ -27,7 +29,11 @@ struct VideoPlayerScreen: View {
                 }
             }
             .onAppear {
-                telegram.beginActivePlayback(chatId: chatId)
+                telegram.beginActivePlayback(
+                    chatId: chatId,
+                    virtualFileIds: virtualFileIds,
+                    virtualSessionId: virtualSessionId
+                )
             }
             .onDisappear {
                 telegram.endActivePlayback()

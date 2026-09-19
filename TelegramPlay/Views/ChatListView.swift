@@ -37,11 +37,17 @@ struct ChatListView: View {
     }
 }
 
+private struct PlayerRoute: Hashable {
+    let url: URL
+    let title: String
+    let virtualSessionId: UUID?
+    let virtualFileIds: [Int]
+}
+
 struct ChatMediaView: View {
     @EnvironmentObject private var telegram: TelegramClientService
     let chat: ChatSummary
-    @State private var playbackURL: URL?
-    @State private var playbackTitle: String?
+    @State private var playerRoute: PlayerRoute?
     @State private var playbackError: String?
 
     var body: some View {
@@ -50,10 +56,10 @@ struct ChatMediaView: View {
                 Task { await play(item) }
             } label: {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(item.title)
+                    Text(item.listTitle)
                         .lineLimit(2)
-                    if let seconds = item.durationSeconds {
-                        Text(formatDuration(seconds))
+                    if let subtitle = item.subtitle {
+                        Text(subtitle)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -66,11 +72,13 @@ struct ChatMediaView: View {
             }
         }
         .navigationTitle(chat.title)
-        .navigationDestination(item: $playbackURL) { url in
+        .navigationDestination(item: $playerRoute) { route in
             VideoPlayerScreen(
-                title: playbackTitle ?? "Video",
-                fileURL: url,
-                chatId: chat.id
+                title: route.title,
+                fileURL: route.url,
+                chatId: chat.id,
+                virtualSessionId: route.virtualSessionId,
+                virtualFileIds: route.virtualFileIds
             )
         }
         .alert("Playback", isPresented: Binding(
@@ -86,20 +94,43 @@ struct ChatMediaView: View {
         }
     }
 
-    private func play(_ item: PlayableMedia) async {
+    private func play(_ item: PlayableItem) async {
         playbackError = nil
         do {
-            let url = try await telegram.localFileURL(for: item)
-            playbackTitle = item.title
-            playbackURL = url
+            switch item {
+            case .single(let media):
+                let url = try await telegram.localFileURL(for: media)
+                playerRoute = PlayerRoute(
+                    url: url,
+                    title: media.title,
+                    virtualSessionId: nil,
+                    virtualFileIds: []
+                )
+            case .virtualRaw(let parts, _, _), .virtualZip(let parts, _, _):
+                let virtual = try await telegram.virtualPlayback(for: item)
+                playerRoute = PlayerRoute(
+                    url: virtual.url,
+                    title: virtual.title,
+                    virtualSessionId: virtual.sessionId,
+                    virtualFileIds: parts.map(\.fileId)
+                )
+            }
         } catch {
             playbackError = error.localizedDescription
         }
     }
+}
 
-    private func formatDuration(_ seconds: Int) -> String {
-        let m = seconds / 60
-        let s = seconds % 60
-        return String(format: "%d:%02d", m, s)
+private extension PlayableItem {
+    var subtitle: String? {
+        switch self {
+        case .single(let media):
+            guard let seconds = media.durationSeconds else { return nil }
+            let m = seconds / 60
+            let s = seconds % 60
+            return String(format: "%d:%02d", m, s)
+        case .virtualRaw(let parts, _, _), .virtualZip(let parts, _, _):
+            return "Split · \(parts.count) parts"
+        }
     }
 }
