@@ -62,7 +62,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.DERIVED_DATA }}
-          key: dd-${{ runner.os }}-${{ hashFiles('project.yml', 'TelegramPlay/**/*.swift') }}
+          key: dd-${{ runner.os }}-${{ hashFiles('project.yml', 'TelegramPlay/**/*.swift', 'TelegramPlay/Assets.xcassets/**') }}
           restore-keys: |
             dd-${{ runner.os }}-
 
