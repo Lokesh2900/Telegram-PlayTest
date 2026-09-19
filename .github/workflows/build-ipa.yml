@@ -76,10 +76,10 @@ jobs:
             exit 1
           fi
           mkdir -p Config
-          cat > Config/Secrets.xcconfig <<EOF
-          TELEGRAM_API_ID = $TELEGRAM_API_ID
-          TELEGRAM_API_HASH = $TELEGRAM_API_HASH
-          EOF
+          printf '%s\n' \
+            "TELEGRAM_API_ID = $TELEGRAM_API_ID" \
+            "TELEGRAM_API_HASH = $TELEGRAM_API_HASH" \
+            > Config/Secrets.xcconfig
 
       - name: Generate Xcode project
         run: xcodegen generate

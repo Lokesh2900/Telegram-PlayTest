@@ -16,7 +16,7 @@ packages:
     from: 1.0.0
   TDLibKit:
     url: https://github.com/Swiftgram/TDLibKit.git
-    branch: main
+    version: 1.5.2-tdlib-1.8.67-d1085f9c
 targets:
   TelegramPlay:
     type: application
@@ -36,6 +36,7 @@ targets:
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: ""
         ENABLE_PREVIEWS: YES
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks"
     info:
       path: TelegramPlay/Info.plist

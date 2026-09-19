@@ -111,7 +111,7 @@ actor TDLibVirtualByteSource {
             attempts += 1
             try Task.checkCancellation()
             let prefix = try await client.getFileDownloadedPrefixSize(fileId: fileId, offset: offset)
-            if prefix >= count { return }
+            if prefix.size >= count { return }
 
             _ = try await client.downloadFile(
                 fileId: fileId,
@@ -129,8 +129,8 @@ actor TDLibVirtualByteSource {
             }
             if file.local.downloadedSize >= needed { return }
             let nextPrefix = try await client.getFileDownloadedPrefixSize(fileId: fileId, offset: offset)
-            if nextPrefix >= count { return }
-            if nextPrefix == prefix {
+            if nextPrefix.size >= count { return }
+            if nextPrefix.size == prefix.size {
                 try await Task.sleep(nanoseconds: 50_000_000)
             }
         }
