@@ -87,6 +87,7 @@ jobs:
       - name: Build unsigned (iphoneos)
         run: |
           set -o pipefail
+          set +e
           xcodebuild build \
             -project "$PROJECT" \
             -scheme "$SCHEME" \
@@ -98,7 +99,25 @@ jobs:
             CODE_SIGN_IDENTITY="-" \
             AD_HOC_CODE_SIGNING_ALLOWED=YES \
             EXPANDED_CODE_SIGN_IDENTITY="" \
-            ONLY_ACTIVE_ARCH=NO
+            ONLY_ACTIVE_ARCH=NO \
+            2>&1 | tee xcodebuild.log
+          BUILD_STATUS=${PIPESTATUS[0]}
+          {
+            echo "{\"sessionId\":\"793cba\",\"runId\":\"ci-build\",\"hypothesisId\":\"H5\",\"location\":\"build-ipa.yml:Build unsigned\",\"message\":\"xcodebuild finished\",\"data\":{\"exitCode\":$BUILD_STATUS},\"timestamp\":$(($(date +%s)*1000))}"
+            grep -n "error:" xcodebuild.log | tail -n 40 | while IFS= read -r line; do
+              esc=${line//\\/\\\\}; esc=${esc//\"/\\\"}
+              echo "{\"sessionId\":\"793cba\",\"runId\":\"ci-build\",\"hypothesisId\":\"compiler\",\"location\":\"xcodebuild.log\",\"message\":\"swift compiler error\",\"data\":{\"line\":\"$esc\"},\"timestamp\":$(($(date +%s)*1000))}"
+            done
+          } >> debug-793cba.log
+          exit "$BUILD_STATUS"
+      - name: Upload build diagnostic log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-793cba-log
+          path: debug-793cba.log
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Package IPA
         run: |
