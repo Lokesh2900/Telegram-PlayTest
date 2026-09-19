@@ -1,0 +1,49 @@
+name: TelegramPlay
+options:
+  bundleIdPrefix: com.telegramplay
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+configs:
+  Debug: debug
+  Release: release
+configFiles:
+  Debug: Config/Secrets.xcconfig
+  Release: Config/Secrets.xcconfig
+packages:
+  MPVKit:
+    url: https://github.com/mpvkit/MPVKit.git
+    from: 1.0.0
+  TDLibKit:
+    url: https://github.com/Swiftgram/TDLibKit.git
+    branch: main
+targets:
+  TelegramPlay:
+    type: application
+    platform: iOS
+    sources:
+      - path: TelegramPlay
+    dependencies:
+      - product: MPVKit
+        package: MPVKit
+      - product: TDLibKit
+        package: TDLibKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.telegramplay.app
+        SWIFT_VERSION: "5.9"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: ""
+        ENABLE_PREVIEWS: YES
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks"
+    info:
+      path: TelegramPlay/Info.plist
+      properties:
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        TelegramApiId: $(TELEGRAM_API_ID)
+        TelegramApiHash: $(TELEGRAM_API_HASH)

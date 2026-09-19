@@ -1,0 +1,7 @@
+.DS_Store
+xcuserdata/
+*.xcuserstate
+DerivedData/
+Config/Secrets.xcconfig
+TelegramPlay.xcodeproj/
+*.ipa
