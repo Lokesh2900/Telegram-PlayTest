@@ -142,7 +142,7 @@ final class TelegramClientService: ObservableObject {
         do {
             _ = try await client.setTdlibParameters(
                 apiHash: TelegramConfig.apiHash,
-                apiId: TelegramConfig.apiId,
+                apiId: Int(TelegramConfig.apiId),
                 applicationVersion: "1.0",
                 databaseDirectory: tdlibPaths.database,
                 databaseEncryptionKey: nil,
@@ -228,7 +228,7 @@ final class TelegramClientService: ObservableObject {
                 offset: 0,
                 onlyLocal: false
             )
-            let raw = history.messages.compactMap(Self.playableMedia(from:))
+            let raw = (history.messages ?? []).compactMap(Self.playableMedia(from:))
             mediaItems = PlayableMediaGrouper.group(raw)
         } catch {
             statusMessage = error.localizedDescription

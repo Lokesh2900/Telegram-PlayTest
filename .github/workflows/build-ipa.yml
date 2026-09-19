@@ -109,6 +109,17 @@ jobs:
               echo "{\"sessionId\":\"793cba\",\"runId\":\"ci-build\",\"hypothesisId\":\"compiler\",\"location\":\"xcodebuild.log\",\"message\":\"build diagnostic\",\"data\":{\"line\":\"$esc\"},\"timestamp\":$(($(date +%s)*1000))}"
             done
           } >> debug-793cba.log
+          if [ "$BUILD_STATUS" -ne 0 ]; then
+            echo "::group::xcodebuild errors (last 40)"
+            grep -En "(^|[[:space:]])(error:|fatal error:)" xcodebuild.log | tail -n 40 || true
+            echo "::endgroup::"
+            {
+              echo "## Build failed (exit $BUILD_STATUS)"
+              echo '```'
+              grep -En "(^|[[:space:]])(error:|fatal error:)" xcodebuild.log | tail -n 40 || true
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
           exit "$BUILD_STATUS"
       - name: Upload build diagnostic log
         if: always()

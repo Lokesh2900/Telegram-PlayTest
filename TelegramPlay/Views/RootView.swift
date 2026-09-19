@@ -8,7 +8,7 @@ struct RootView: View {
             switch telegram.authPhase {
             case .starting:
                 ProgressView("Connecting to Telegram…")
-            case .phone, .code, .password:
+            case .phone, .code, .password(_):
                 AuthFlowView()
             case .ready:
                 NavigationStack {
