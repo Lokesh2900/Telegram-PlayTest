@@ -1,0 +1,119 @@
+name: Build unsigned IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - Stitch-stream
+
+concurrency:
+  group: ipa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-unsigned-ipa:
+    runs-on: macos-15
+    timeout-minutes: 90
+
+    env:
+      SCHEME: TelegramPlay
+      PROJECT: TelegramPlay.xcodeproj
+      DERIVED_DATA: ${{ runner.temp }}/DerivedData
+      APP_PRODUCT: ${{ runner.temp }}/DerivedData/Build/Products/Release-iphoneos/TelegramPlay.app
+      IPA_OUTPUT: TelegramPlay-unsigned.ipa
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Cache Homebrew
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/Homebrew
+            /opt/homebrew/Cellar/xcodegen
+          key: brew-xcodegen-${{ runner.os }}-v1
+          restore-keys: |
+            brew-xcodegen-${{ runner.os }}-
+
+      - name: Install XcodeGen
+        run: |
+          if ! command -v xcodegen >/dev/null 2>&1; then
+            brew install xcodegen
+          fi
+
+      - name: Cache Swift Package Manager
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/org.swift.swiftpm
+            ${{ env.DERIVED_DATA }}/SourcePackages
+          key: spm-${{ runner.os }}-${{ hashFiles('project.yml') }}
+          restore-keys: |
+            spm-${{ runner.os }}-
+
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.DERIVED_DATA }}
+          key: dd-${{ runner.os }}-${{ hashFiles('project.yml', 'TelegramPlay/**/*.swift') }}
+          restore-keys: |
+            dd-${{ runner.os }}-
+
+      - name: Write Telegram API config
+        env:
+          TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+          TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+        run: |
+          if [ -z "$TELEGRAM_API_ID" ] || [ -z "$TELEGRAM_API_HASH" ]; then
+            echo "Missing TELEGRAM_API_ID or TELEGRAM_API_HASH repository secrets."
+            exit 1
+          fi
+          mkdir -p Config
+          cat > Config/Secrets.xcconfig <<EOF
+          TELEGRAM_API_ID = $TELEGRAM_API_ID
+          TELEGRAM_API_HASH = $TELEGRAM_API_HASH
+          EOF
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build unsigned (iphoneos)
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$DERIVED_DATA" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="-" \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES \
+            EXPANDED_CODE_SIGN_IDENTITY="" \
+            ONLY_ACTIVE_ARCH=NO
+
+      - name: Package IPA
+        run: |
+          test -d "$APP_PRODUCT" || {
+            echo "Expected app not found at $APP_PRODUCT"
+            find "$DERIVED_DATA/Build/Products" -name '*.app' -maxdepth 4 || true
+            exit 1
+          }
+          chmod +x ci/package-unsigned-ipa.sh
+          ci/package-unsigned-ipa.sh "$APP_PRODUCT" "$IPA_OUTPUT"
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TelegramPlay-unsigned-ipa
+          path: ${{ env.IPA_OUTPUT }}
+          if-no-files-found: error
+          retention-days: 14

@@ -26,6 +26,8 @@ Sign in with Telegram (TDLib), open a chat, and play videos with **MPVKit** (lib
 
 4. Build and run on a device or simulator (first SPM resolve downloads TDLib + MPV binaries; can take several minutes).
 
+**No Mac?** Build an unsigned IPA on GitHub Actions and install with SideStore or LiveContainer — see [docs/CI.md](docs/CI.md).
+
 ## Usage
 
 1. Enter your phone number and Telegram login code (and 2FA password if enabled).
